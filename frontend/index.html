@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Job Portal</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 320px;
+      padding: 30px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      color: white;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #00c6ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #009ec3;
+    }
+
+    .jobs {
+      margin-top: 20px;
+    }
+
+    .job {
+      background: rgba(255,255,255,0.2);
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Login</h2>
+
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <div class="jobs">
+    <h3>Jobs</h3>
+    <button onclick="loadJobs()">Load Jobs</button>
+    <div id="jobList"></div>
+  </div>
+</div>
+
+<script>
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch("http://localhost:5000/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+localStorage.setItem("userId", data._id);
+  if(res.status === 200){
+    alert("Login Success 🎉");
+  } else {
+    alert("Login Failed ❌");
+  }
+
+  console.log(data);
+}
+
+async function loadJobs() {
+  const res = await fetch("http://localhost:5000/jobs");
+  const jobs = await res.json();
+
+  const jobList = document.getElementById("jobList");
+  jobList.innerHTML = "";
+
+  jobs.forEach(job => {
+  jobList.innerHTML += `
+    <div class="job">
+      <b>${job.title}</b><br>
+      ${job.company} - ${job.location || "India"} <br>
+      <button onclick="applyJob('${job._id}')">Apply</button>
+    </div>
+  `;
+});
+}
+async function applyJob(jobId) {
+  const userId = localStorage.getItem("userId");
+
+  await fetch("http://localhost:5000/apply", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      user_id: userId,
+      job_id: jobId
+    })
+  });
+
+  alert("Applied Successfully");
+}
+</script>
+
+</body>
+</html>
